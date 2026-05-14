@@ -74,6 +74,7 @@ export default function Layout({ children, user, onLogout }) {
           {navItem('/bookmarks', 'Bookmarks', '⭐')}
           {navItem('/activity', 'Activity', '📜')}
           {navItem('/reports', 'Reports', '📑')}
+          {navItem('/ai-tools', 'AI Tools', '🤖')}
 
           {['Detection', 'Forensics', 'Operations', 'Security', 'Intelligence', 'Administration', 'Reports'].map(cat => {
             const catFeatures = FEATURES.filter(f => f.category === cat);
@@ -141,6 +142,7 @@ export default function Layout({ children, user, onLogout }) {
             {location.pathname === '/bookmarks' && 'Bookmarks'}
             {location.pathname === '/activity' && 'Activity Feed'}
             {location.pathname === '/reports' && 'Report Builder'}
+            {location.pathname === '/ai-tools' && 'AI Tools'}
             {location.pathname === '/profile' && 'Profile'}
             {location.pathname.startsWith('/feature/') && (FEATURES.find(f => location.pathname.includes(f.key))?.name || 'Feature')}
           </div>

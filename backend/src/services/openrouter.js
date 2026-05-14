@@ -1,8 +1,9 @@
 const fetch = require('node-fetch');
+const { parseAIJson } = require('../utils/parseAIJson');
 require('dotenv').config({ path: require('path').join(__dirname, '../../../.env') });
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 
 const featurePrompts = {
@@ -329,12 +330,12 @@ const analyzeWithAI = async (featureType, item) => {
       throw new Error('No content in AI response');
     }
 
-    // Try to parse as JSON, handle markdown code blocks
+    // Robust 3-strategy JSON parsing
+    const parseResult = parseAIJson(content);
     let parsed;
-    try {
-      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      parsed = JSON.parse(cleaned);
-    } catch (e) {
+    if (parseResult.success) {
+      parsed = parseResult.data;
+    } else {
       // If JSON parsing fails, return structured response
       parsed = {
         verdict: 'ANALYSIS_COMPLETE',
@@ -350,6 +351,7 @@ const analyzeWithAI = async (featureType, item) => {
       analysis: parsed,
       model: OPENROUTER_MODEL,
       analyzed_at: new Date().toISOString(),
+      parse_strategy: parseResult.strategy,
     };
   } catch (error) {
     console.error('OpenRouter AI error:', error.message);

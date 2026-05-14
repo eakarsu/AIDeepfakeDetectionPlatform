@@ -2,6 +2,9 @@ const express = require('express');
 const { pool } = require('../db');
 const { analyzeWithAI } = require('../services/openrouter');
 const authMiddleware = require('../middleware/auth');
+const { aiRateLimiter } = require('../middleware/rateLimiter');
+const { upload } = require('../middleware/upload');
+const { fireWebhook } = require('./webhooks');
 
 const router = express.Router();
 
@@ -88,7 +91,7 @@ router.post('/users', authMiddleware, async (req, res) => {
 });
 
 // AI analysis for users
-router.post('/users/:id/analyze', authMiddleware, async (req, res) => {
+router.post('/users/:id/analyze', authMiddleware, aiRateLimiter, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
@@ -98,6 +101,71 @@ router.post('/users/:id/analyze', authMiddleware, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Paginated list routes for scan-history, audit-logs, and threat-intelligence
+const PAGINATED_ROUTES = ['scan-history', 'audit-logs', 'threat-intelligence'];
+PAGINATED_ROUTES.forEach((route) => {
+  const config = FEATURES[route];
+  const { table } = config;
+  router.get(`/${route}`, authMiddleware, async (req, res) => {
+    try {
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+      const offset = (page - 1) * limit;
+      const [dataResult, countResult] = await Promise.all([
+        pool.query(`SELECT * FROM ${table} ORDER BY created_at DESC LIMIT $1 OFFSET $2`, [limit, offset]),
+        pool.query(`SELECT COUNT(*) as total FROM ${table}`)
+      ]);
+      const total = parseInt(countResult.rows[0].total);
+      res.json({
+        data: dataResult.rows,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+});
+
+// File upload routes for image/video/audio scans
+const UPLOAD_ROUTES = {
+  'image-scans': { table: 'image_scans', field: 'single' },
+  'video-scans': { table: 'video_scans', field: 'single' },
+  'audio-scans': { table: 'audio_scans', field: 'single' },
+};
+
+Object.entries(UPLOAD_ROUTES).forEach(([route, config]) => {
+  const { table } = config;
+  router.post(`/${route}/upload`, authMiddleware, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+      const { originalname, size, mimetype, filename, path: filePath } = req.file;
+      const bodyFields = req.body || {};
+      const title = bodyFields.title || originalname;
+      const description = bodyFields.description || `Uploaded file: ${originalname}`;
+      const result = await pool.query(
+        `INSERT INTO ${table} (title, description, file_name, status)
+         VALUES ($1, $2, $3, 'pending') RETURNING *`,
+        [title, description, originalname]
+      );
+      const item = result.rows[0];
+      // Merge file metadata for AI analysis
+      const itemWithMeta = {
+        ...item,
+        file_name: originalname,
+        file_size: size,
+        mimetype,
+        stored_filename: filename,
+      };
+      res.status(201).json({
+        item: itemWithMeta,
+        file_metadata: { originalname, size, mimetype, stored: filename }
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 });
 
 // Generic CRUD + AI for all features
@@ -178,7 +246,7 @@ Object.entries(FEATURES).forEach(([route, config]) => {
   });
 
   // AI Analysis
-  router.post(`/${route}/:id/analyze`, authMiddleware, async (req, res) => {
+  router.post(`/${route}/:id/analyze`, authMiddleware, aiRateLimiter, async (req, res) => {
     try {
       const result = await pool.query(`SELECT * FROM ${table} WHERE id = $1`, [req.params.id]);
       if (result.rows.length === 0) {
@@ -196,6 +264,18 @@ Object.entries(FEATURES).forEach(([route, config]) => {
           `UPDATE ${table} SET ai_result = $1, confidence_score = $2, risk_level = COALESCE($3, risk_level), status = 'analyzed', updated_at = NOW() WHERE id = $4`,
           [JSON.stringify(aiResult), confidence, riskLevel, req.params.id]
         );
+        // Fire webhooks for high or critical risk detections
+        if (riskLevel === 'critical' || riskLevel === 'high') {
+          const eventType = riskLevel === 'critical' ? 'critical_detection' : 'high_risk';
+          fireWebhook(req.user.id, eventType, {
+            table,
+            item_id: req.params.id,
+            risk_level: riskLevel,
+            confidence,
+            verdict: aiResult.analysis?.verdict,
+            summary: aiResult.analysis?.summary,
+          }).catch(console.error);
+        }
       }
 
       res.json(aiResult);
