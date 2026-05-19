@@ -13,6 +13,20 @@ import Bookmarks from './pages/Bookmarks';
 import ActivityFeed from './pages/ActivityFeed';
 import ReportBuilder from './pages/ReportBuilder';
 import GlobalSearch from './pages/GlobalSearch';
+import AITools from './pages/AITools';
+import CustomViewsPage from './pages/CustomViewsPage';
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+import CfRealTimeMediaAuthentication from './pages/CfRealTimeMediaAuthentication';
+import CfSocialMediaMonitoring from './pages/CfSocialMediaMonitoring';
+import CfMediaProvenanceTracking from './pages/CfMediaProvenanceTracking';
+import CfExplainability from './pages/CfExplainability';
+import GapMissingDetectDeepfakeAnalyzeMediaDetectFaceSwappingD from './pages/GapMissingDetectDeepfakeAnalyzeMediaDetectFaceSwappingD';
+import GapNoMediaProcessingPipelineWiredUploadStubsOnly from './pages/GapNoMediaProcessingPipelineWiredUploadStubsOnly';
+import GapNoDetectionResultsDatabaseSchema from './pages/GapNoDetectionResultsDatabaseSchema';
+import GapLimitedAnalyticsEndpointCoverageBeyondPlumbing from './pages/GapLimitedAnalyticsEndpointCoverageBeyondPlumbing';
+import GapLimitedSocialPlatformIntegrationForAutomatedDetection from './pages/GapLimitedSocialPlatformIntegrationForAutomatedDetection';
+import GapNoCalendarIntegration from './pages/GapNoCalendarIntegration';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -61,7 +75,21 @@ function App() {
         <Route path="/activity" element={user ? <Layout user={user} onLogout={handleLogout}><ActivityFeed /></Layout> : <Navigate to="/login" />} />
         <Route path="/reports" element={user ? <Layout user={user} onLogout={handleLogout}><ReportBuilder /></Layout> : <Navigate to="/login" />} />
         <Route path="/search" element={user ? <Layout user={user} onLogout={handleLogout}><GlobalSearch /></Layout> : <Navigate to="/login" />} />
+        <Route path="/ai-tools" element={user ? <Layout user={user} onLogout={handleLogout}><AITools /></Layout> : <Navigate to="/login" />} />
+        <Route path="/custom-views" element={user ? <Layout user={user} onLogout={handleLogout}><CustomViewsPage /></Layout> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
+      
+        {/* // === Batch 02 Gaps & Frontend Mounts === */}
+        <Route path="/cf/real-time-media-authentication" element={<CfRealTimeMediaAuthentication />} />
+        <Route path="/cf/social-media-monitoring" element={<CfSocialMediaMonitoring />} />
+        <Route path="/cf/media-provenance-tracking" element={<CfMediaProvenanceTracking />} />
+        <Route path="/cf/explainability" element={<CfExplainability />} />
+        <Route path="/gap/missing-detect-deepfake-analyze-media-detect-face-swapping-d" element={<GapMissingDetectDeepfakeAnalyzeMediaDetectFaceSwappingD />} />
+        <Route path="/gap/no-media-processing-pipeline-wired-upload-stubs-only" element={<GapNoMediaProcessingPipelineWiredUploadStubsOnly />} />
+        <Route path="/gap/no-detection-results-database-schema" element={<GapNoDetectionResultsDatabaseSchema />} />
+        <Route path="/gap/limited-analytics-endpoint-coverage-beyond-plumbing" element={<GapLimitedAnalyticsEndpointCoverageBeyondPlumbing />} />
+        <Route path="/gap/limited-social-platform-integration-for-automated-detection" element={<GapLimitedSocialPlatformIntegrationForAutomatedDetection />} />
+        <Route path="/gap/no-calendar-integration" element={<GapNoCalendarIntegration />} />
       </Routes>
     </BrowserRouter>
   );

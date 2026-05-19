@@ -193,6 +193,58 @@ export const api = {
   // Compare
   compareItems: (items) =>
     fetch(`${API_BASE}/compare`, { method: 'POST', headers: headers(), body: JSON.stringify({ items }) }).then(handleResponse),
+
+  // AI Tools (new): batch-analyze, export-report (PDF), watchlist-check
+  aiBatchAnalyze: (batch_scan_id) =>
+    fetch(`${API_BASE}/ai/batch-analyze`, { method: 'POST', headers: headers(), body: JSON.stringify({ batch_scan_id }) }).then(handleResponse),
+
+  aiExportReport: async (scan_id, scan_type) => {
+    const res = await fetch(`${API_BASE}/ai/export-report`, {
+      method: 'POST', headers: headers(), body: JSON.stringify({ scan_id, scan_type })
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to generate report');
+    }
+    return res.blob();
+  },
+
+  aiWatchlistCheck: ({ url, account_handle }) =>
+    fetch(`${API_BASE}/ai/watchlist-check`, { method: 'POST', headers: headers(), body: JSON.stringify({ url, account_handle }) }).then(handleResponse),
+
+  aiExplainDetection: (payload) =>
+    fetch(`${API_BASE}/ai/explain-detection`, { method: 'POST', headers: headers(), body: JSON.stringify(payload) }).then(handleResponse),
+
+  aiAuthenticityNarrative: (payload) =>
+    fetch(`${API_BASE}/ai/generate-authenticity-score-narrative`, { method: 'POST', headers: headers(), body: JSON.stringify(payload) }).then(handleResponse),
+
+  // Webhooks
+  getWebhooks: () =>
+    fetch(`${API_BASE}/webhooks`, { headers: headers() }).then(handleResponse),
+
+  configureWebhook: (data) =>
+    fetch(`${API_BASE}/webhooks/configure`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+
+  deleteWebhook: (id) =>
+    fetch(`${API_BASE}/webhooks/${id}`, { method: 'DELETE', headers: headers() }).then(handleResponse),
+
+  // File-aware upload for image/video/audio scans
+  uploadScanFile: (route, file, extraFields = {}) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    Object.entries(extraFields).forEach(([k, v]) => { if (v != null) formData.append(k, v); });
+    return fetch(`${API_BASE}/${route}/upload`, {
+      method: 'POST',
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      body: formData,
+    }).then(handleResponse);
+  },
 };
 
 export const FEATURES = [
