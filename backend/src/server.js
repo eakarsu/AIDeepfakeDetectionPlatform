@@ -59,6 +59,9 @@ app.use('/api/ai', require('./routes/explainDetection'));
 app.use('/api/ai', require('./routes/provenanceTrack'));
 app.use('/api/ai', require('./routes/socialMonitor'));
 app.use('/api/ai', require('./routes/mediaAuth'));
+
+// Bespoke custom views (face heatmap + authenticity gauge)
+app.use('/api/custom-views', require('./routes/customViews'));
 // Static file serving for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

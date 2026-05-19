@@ -14,6 +14,7 @@ import ActivityFeed from './pages/ActivityFeed';
 import ReportBuilder from './pages/ReportBuilder';
 import GlobalSearch from './pages/GlobalSearch';
 import AITools from './pages/AITools';
+import CustomViewsPage from './pages/CustomViewsPage';
 
 // // === Batch 02 Gaps & Frontend Mounts ===
 import CfRealTimeMediaAuthentication from './pages/CfRealTimeMediaAuthentication';
@@ -75,6 +76,7 @@ function App() {
         <Route path="/reports" element={user ? <Layout user={user} onLogout={handleLogout}><ReportBuilder /></Layout> : <Navigate to="/login" />} />
         <Route path="/search" element={user ? <Layout user={user} onLogout={handleLogout}><GlobalSearch /></Layout> : <Navigate to="/login" />} />
         <Route path="/ai-tools" element={user ? <Layout user={user} onLogout={handleLogout}><AITools /></Layout> : <Navigate to="/login" />} />
+        <Route path="/custom-views" element={user ? <Layout user={user} onLogout={handleLogout}><CustomViewsPage /></Layout> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
       
         {/* // === Batch 02 Gaps & Frontend Mounts === */}
