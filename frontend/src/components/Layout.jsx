@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FEATURES, api } from '../services/api';
+import { TS_FEATURES } from '../services/tsApi';
 
 const icons = {
   Camera: '📷', Video: '🎬', Mic: '🎙️', Users: '👥', Cpu: '🤖', FileSearch: '🔍',
@@ -77,6 +78,32 @@ export default function Layout({ children, user, onLogout }) {
           {navItem('/ai-tools', 'AI Tools', '🤖')}
           {navItem('/custom-views', 'Detection Analytics', '🧬')}
 
+          {/* Trust & Safety Section */}
+          <div>
+            <div className={`${sidebarOpen ? 'mt-4 mb-2 px-2 text-xs font-semibold text-red-400/80 uppercase tracking-wider flex items-center gap-1' : 'mt-2 border-t border-dark-700/30 pt-2'}`}>
+              {sidebarOpen ? <><span>🛡️</span> Trust &amp; Safety</> : ''}
+            </div>
+            {TS_FEATURES.map(f => (
+              <button
+                key={f.key}
+                onClick={() => navigate(`/ts/${f.key}`)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
+                  location.pathname.startsWith(`/ts/${f.key}`)
+                    ? 'bg-red-500/15 text-red-300'
+                    : 'text-dark-300 hover:bg-dark-700/50 hover:text-white'
+                }`}
+              >
+                <span className="text-base flex-shrink-0">{f.icon}</span>
+                {sidebarOpen && (
+                  <span className="truncate text-left flex-1">{f.name}</span>
+                )}
+                {sidebarOpen && f.isCsam && (
+                  <span className="text-[9px] bg-red-900/50 text-red-400 border border-red-700/40 rounded px-1 flex-shrink-0">CSAM</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {['Detection', 'Forensics', 'Operations', 'Security', 'Intelligence', 'Administration', 'Reports'].map(cat => {
             const catFeatures = FEATURES.filter(f => f.category === cat);
             if (catFeatures.length === 0) return null;
@@ -147,6 +174,16 @@ export default function Layout({ children, user, onLogout }) {
             {location.pathname === '/custom-views' && 'Detection Analytics'}
             {location.pathname === '/profile' && 'Profile'}
             {location.pathname.startsWith('/feature/') && (FEATURES.find(f => location.pathname.includes(f.key))?.name || 'Feature')}
+            {location.pathname.startsWith('/ts/') && (() => {
+              const key = location.pathname.split('/')[2];
+              const tsf = TS_FEATURES.find(f => f.key === key);
+              const sub = location.pathname.includes('/ai-panel') ? ' — AI Panel'
+                : location.pathname.includes('/new') ? ' — New'
+                : location.pathname.includes('/edit') ? ' — Edit'
+                : location.pathname.split('/').length > 3 ? ' — Detail'
+                : '';
+              return tsf ? `Trust & Safety — ${tsf.name}${sub}` : 'Trust & Safety';
+            })()}
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/search')} className="text-dark-400 hover:text-white p-2 hover:bg-dark-700/50 rounded-lg transition-colors" title="Search">

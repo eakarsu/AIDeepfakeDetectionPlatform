@@ -28,6 +28,15 @@ import GapLimitedAnalyticsEndpointCoverageBeyondPlumbing from './pages/GapLimite
 import GapLimitedSocialPlatformIntegrationForAutomatedDetection from './pages/GapLimitedSocialPlatformIntegrationForAutomatedDetection';
 import GapNoCalendarIntegration from './pages/GapNoCalendarIntegration';
 
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+// === Trust & Safety ===
+import TsList from './pages/ts/TsList';
+import TsDetail from './pages/ts/TsDetail';
+import TsForm from './pages/ts/TsForm';
+import TsAiPanel from './pages/ts/TsAiPanel';
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +71,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/codex/custom-viz" element={<CodexCustomVizFeature />} />
+        <Route path="/codex/operations" element={<CodexOperationsFeature />} />
+
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
         <Route path="/" element={user ? <Layout user={user} onLogout={handleLogout}><Dashboard /></Layout> : <Navigate to="/login" />} />
         <Route path="/feature/:featureKey" element={user ? <Layout user={user} onLogout={handleLogout}><FeatureList /></Layout> : <Navigate to="/login" />} />
@@ -77,6 +89,13 @@ function App() {
         <Route path="/search" element={user ? <Layout user={user} onLogout={handleLogout}><GlobalSearch /></Layout> : <Navigate to="/login" />} />
         <Route path="/ai-tools" element={user ? <Layout user={user} onLogout={handleLogout}><AITools /></Layout> : <Navigate to="/login" />} />
         <Route path="/custom-views" element={user ? <Layout user={user} onLogout={handleLogout}><CustomViewsPage /></Layout> : <Navigate to="/login" />} />
+        {/* Trust & Safety Routes */}
+        <Route path="/ts/:featureKey" element={user ? <Layout user={user} onLogout={handleLogout}><TsList /></Layout> : <Navigate to="/login" />} />
+        <Route path="/ts/:featureKey/new" element={user ? <Layout user={user} onLogout={handleLogout}><TsForm /></Layout> : <Navigate to="/login" />} />
+        <Route path="/ts/:featureKey/ai-panel" element={user ? <Layout user={user} onLogout={handleLogout}><TsAiPanel /></Layout> : <Navigate to="/login" />} />
+        <Route path="/ts/:featureKey/:id" element={user ? <Layout user={user} onLogout={handleLogout}><TsDetail /></Layout> : <Navigate to="/login" />} />
+        <Route path="/ts/:featureKey/:id/edit" element={user ? <Layout user={user} onLogout={handleLogout}><TsForm /></Layout> : <Navigate to="/login" />} />
+
         <Route path="*" element={<Navigate to="/" />} />
       
         {/* // === Batch 02 Gaps & Frontend Mounts === */}

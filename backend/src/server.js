@@ -60,6 +60,16 @@ app.use('/api/ai', require('./routes/provenanceTrack'));
 app.use('/api/ai', require('./routes/socialMonitor'));
 app.use('/api/ai', require('./routes/mediaAuth'));
 
+// ── Trust & Safety / Content Moderation Platform ─────────────────────────────
+app.use('/api/ts/csam-hash-match',       require('./routes/tsFeat_csamHashMatch'));
+app.use('/api/ts/policy-engine',         require('./routes/tsFeat_policyEngine'));
+app.use('/api/ts/human-review-queue',    require('./routes/tsFeat_humanReviewQueue'));
+app.use('/api/ts/appeals-console',       require('./routes/tsFeat_appealsConsole'));
+app.use('/api/ts/region-rules',          require('./routes/tsFeat_regionRules'));
+app.use('/api/ts/transparency-reports',  require('./routes/tsFeat_transparencyReports'));
+app.use('/api/ts/creator-comms',         require('./routes/tsFeat_creatorComms'));
+app.use('/api/ts/signal-sharing-gifct',  require('./routes/tsFeat_signalSharingGifct'));
+
 // Bespoke custom views (face heatmap + authenticity gauge)
 app.use('/api/custom-views', require('./routes/customViews'));
 // Static file serving for uploads
