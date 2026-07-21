@@ -4,12 +4,18 @@ const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const { initDB } = require('./db');
+const { pool } = require('./db');
+const authMiddleware = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const featureRoutes = require('./routes/features');
 const extraRoutes = require('./routes/extra');
 const webhookRoutes = require('./routes/webhooks');
 const aiNewRoutes = require('./routes/aiNew');
+
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be configured with at least 32 characters');
+}
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 4000;
@@ -50,6 +56,7 @@ app.use('/api', featureRoutes);
 app.use('/api', extraRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/ai', aiNewRoutes);
+app.use('/api/governed-workflows', require('./routes/governedWorkflow'));
 
 
 
@@ -73,7 +80,11 @@ app.use('/api/ts/signal-sharing-gifct',  require('./routes/tsFeat_signalSharingG
 // Bespoke custom views (face heatmap + authenticity gauge)
 app.use('/api/custom-views', require('./routes/customViews'));
 // Static file serving for uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', authMiddleware, express.static(path.join(__dirname, '../uploads'), {
+  dotfiles: 'deny',
+  fallthrough: false,
+  immutable: false,
+}));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -89,26 +100,8 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    await initDB();
-    console.log('Database initialized');
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-missing-detect-deepfake-analyze-media-detect-face-swapping-d', require('./routes/gap_missing_detect_deepfake_analyze_media_detect_face_swapping_d'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-media-processing-pipeline-wired-upload-stubs-only', require('./routes/gap_no_media_processing_pipeline_wired_upload_stubs_only'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-detection-results-database-schema', require('./routes/gap_no_detection_results_database_schema'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-limited-analytics-endpoint-coverage-beyond-plumbing', require('./routes/gap_limited_analytics_endpoint_coverage_beyond_plumbing'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-limited-social-platform-integration-for-automated-detection', require('./routes/gap_limited_social_platform_integration_for_automated_detection'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-calendar-integration', require('./routes/gap_no_calendar_integration'));
+    // Migrations are explicit; startup verifies connectivity only.
+    await pool.query('SELECT 1');
 
     app.listen(PORT, () => {
       console.log(`Backend server running on http://localhost:${PORT}`);

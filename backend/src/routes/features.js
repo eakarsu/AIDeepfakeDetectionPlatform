@@ -78,11 +78,14 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
 router.post('/users', authMiddleware, async (req, res) => {
   try {
     const bcrypt = require('bcryptjs');
-    const { email, password, full_name, role, organization } = req.body;
-    const password_hash = await bcrypt.hash(password || 'password123', 10);
+    const { email, password, full_name, organization } = req.body;
+    if (!email || !full_name || typeof password !== 'string' || password.length < 12) {
+      return res.status(422).json({ error: 'email, full_name, and a 12+ character password are required' });
+    }
+    const password_hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, full_name, role, organization) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, role, organization, is_active, created_at',
-      [email, password_hash, full_name, role || 'analyst', organization || 'Default Org']
+      'INSERT INTO users (email, password_hash, full_name, role, organization, tenant_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, full_name, role, organization, tenant_id, is_active, created_at',
+      [email, password_hash, full_name, 'analyst', organization || 'Unassigned', req.user.tenant_id]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

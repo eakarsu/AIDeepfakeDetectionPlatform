@@ -9,6 +9,9 @@ const authMiddleware = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
   try {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+      return res.status(503).json({ error: 'Authentication is not configured' });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
