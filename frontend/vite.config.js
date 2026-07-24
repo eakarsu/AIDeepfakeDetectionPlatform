@@ -19,10 +19,11 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: Number(process.env.FRONTEND_PORT || 3000),
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: `http://127.0.0.1:${process.env.BACKEND_PORT || 4000}`,
         changeOrigin: true,
       },
     },
