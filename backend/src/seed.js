@@ -3,6 +3,12 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const { pool, initDB } = require('./db');
 
+function requireDemoPassword() {
+  const password = process.env.DEMO_PASSWORD || process.env.SEED_DEMO_PASSWORD || process.env.DEMO_SEED_PASSWORD || '';
+  if (password.length < 12 || password.length > 1024) throw new Error('DEMO_PASSWORD must contain 12-1024 characters');
+  return password;
+}
+
 const seed = async () => {
   try {
     await initDB();
@@ -21,7 +27,7 @@ const seed = async () => {
     }
 
     // Seed Users (15)
-    const passwordHash = await bcrypt.hash('password123', 10);
+    const passwordHash = await bcrypt.hash(requireDemoPassword(), 10);
     const users = [
       ['admin@deepfake.ai', passwordHash, 'Sarah Chen', 'admin', 'DeepfakeGuard Inc'],
       ['analyst1@deepfake.ai', passwordHash, 'Marcus Johnson', 'analyst', 'DeepfakeGuard Inc'],
@@ -409,7 +415,7 @@ const seed = async () => {
     console.log('Seeded 15 audit logs');
 
     console.log('\n✅ All seed data inserted successfully!');
-    console.log('Default login: admin@deepfake.ai / password123');
+    console.log('Demo login users provisioned from the local environment.');
     process.exit(0);
   } catch (err) {
     console.error('Seeding error:', err);
