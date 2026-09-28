@@ -120,7 +120,7 @@ export default function Login({ onLogin }) {
               onClick={fillCredentials}
               className="w-full mt-3 py-3 bg-dark-700/50 border border-dark-600/50 rounded-xl text-sm text-dark-300 hover:bg-dark-600/50 hover:text-white transition-colors"
             >
-              Demo Login (Auto-fill Credentials)
+              Auto Fill Demo Credentials
             </button>
           )}
 

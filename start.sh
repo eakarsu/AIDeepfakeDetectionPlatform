@@ -84,7 +84,7 @@ npm start &
 backend_pid=$!
 
 cd "$project_dir/frontend"
-npm run dev -- --port "${FRONTEND_PORT:-3000}" &
+npm run dev -- --host 127.0.0.1 --port "${FRONTEND_PORT:-3000}" &
 frontend_pid=$!
 
 echo "Application processes started. Startup does not install, migrate, seed, or terminate unrelated processes."
